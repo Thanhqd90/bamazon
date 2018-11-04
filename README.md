@@ -6,7 +6,7 @@ Video demo link: https://www.youtube.com/watch?v=HeIMpUC0ICQ&feature=youtu.be
 Instructions
 Clone repository to your local machine
 run "npm install" in your command line to install all dependancies
-run bamazon.schema on your mysql application of choice to create the database
+run bamazon script.schema on your mysql application of choice to create the database
 
 Customer View
 run "node bamazonCustomer.js" 
