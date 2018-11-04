@@ -1,10 +1,11 @@
+//Required dependancies
 require('dotenv').config()
 colors = require('colors');
-
 const Table = require('cli-table'),
     keys = require("./keys.js"),
     inquirer = require("inquirer");
 
+// mysql connection with login information contained in dotenv and keys
 let mysql = require('mysql'),
     connection = mysql.createConnection({
         host: 'localhost',
@@ -14,18 +15,35 @@ let mysql = require('mysql'),
         database: 'bamazon'
     })
 
+    // Check for successful connection to database
 connection.connect(function (err) {
     if (err) throw err;
     welcomeDisplay();
     listProducts();
 });
 
+// Welcome view for BAMAZON
 function welcomeDisplay() {
     console.log("*******************************************************************".rainbow);
     console.log("                      Welcome to Bamazon                           ".bgRed);
     console.log("*******************************************************************\n".rainbow);
 }
 
+// Exit view for BAMAZON
+function exitDisplay() {
+    console.log("\n*******************************************************************".rainbow);
+    console.log("                      Now Exiting Bamazon                          ".bgBlue);
+    console.log("*******************************************************************\n".rainbow);
+}
+
+// Invoice view for BAMAZON
+function displayInvoice() {
+    console.log("*******************************************************************".rainbow);
+    console.log("                         Order Summary                             ".bgYellow.black);
+    console.log("*******************************************************************".rainbow);
+}
+
+// Display all items for sale in a table
 function listProducts() {
     connection.query("SELECT * FROM products", function (err, res) {
         if (err) throw err;
@@ -41,13 +59,14 @@ function listProducts() {
     placeOrder();
 };
 
+// Updates the stock of the item purchased and displays invoice 
 function placeOrder() {
     inquirer.prompt([{
             type: 'input',
             name: 'id',
             message: 'Enter the product ID of the item you want to purchase'.underline.yellow + ' (or '.grey + `${"q".bold.red}` + ' to exit)'.grey,
             validate: input => {
-                if (input.toLowerCase() == 'q') process.exit()
+                if (input.toLowerCase() == 'q') process.exit(exitDisplay())
 
                 if (isNaN(input)) {
                     return 'Please enter a valid product number'.red
@@ -61,7 +80,7 @@ function placeOrder() {
             name: 'quantity',
             message: 'Enter quantity of purchase'.underline.bold.magenta + ' (or '.grey + `${"q".bold.red}` + ' to exit)'.grey,
             validate: input => {
-                if (input.toLowerCase() == 'q') process.exit()
+                if (input.toLowerCase() == 'q') process.exit(exitDisplay())
 
                 if (isNaN(input)) {
                     return 'Please valid number'.red
@@ -78,9 +97,7 @@ function placeOrder() {
             },
             function (err, res) {
                 if (err) throw err;
-                console.log("*******************************************************************".rainbow);
-                console.log("                         Order Summary                             ".bgYellow.black);
-                console.log("*******************************************************************".rainbow);
+                displayInvoice();
                 let table = new Table({
                     head: ['Item Name'.underline.yellow, 'Quantity purchased'.underline.red, 'Total cost'.underline.green]
                 })
@@ -92,7 +109,8 @@ function placeOrder() {
                         connection.query(
                             "UPDATE products SET ? WHERE ?",
                             [{
-                                    stock_quantity: res[i].stock_quantity - order.quantity
+                                    stock_quantity: res[i].stock_quantity - order.quantity,
+                                    product_sales: total
                                 },
                                 {
                                     item_id: order.id
